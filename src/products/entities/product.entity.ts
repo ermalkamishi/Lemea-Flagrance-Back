@@ -8,8 +8,14 @@ export class Product {
   @Column()
   name: string;
 
+  @Column({ nullable: true })
+  name_mk: string;
+
   @Column({ type: 'text', nullable: true })
   description: string;
+
+  @Column({ type: 'text', nullable: true })
+  description_mk: string;
 
   @Column({ type: 'decimal', precision: 10, scale: 2, default: 0 })
   price: number;
