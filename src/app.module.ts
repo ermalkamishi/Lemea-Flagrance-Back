@@ -11,6 +11,7 @@ import { AdminModule } from './admin/admin.module';
 import { OrdersModule } from './orders/orders.module';
 import { ReviewsModule } from './reviews/reviews.module';
 import { CloudinaryModule } from './cloudinary/cloudinary.module';
+import { ContactModule } from './contact/contact.module';
 
 @Module({
   imports: [
@@ -72,6 +73,7 @@ import { CloudinaryModule } from './cloudinary/cloudinary.module';
     OrdersModule,
     ReviewsModule,
     CloudinaryModule,
+    ContactModule,
   ],
   controllers: [AppController],
   providers: [AppService],
