@@ -3,6 +3,10 @@ import { AppModule } from './app.module';
 import { NestExpressApplication } from '@nestjs/platform-express';
 import { ValidationPipe } from '@nestjs/common';
 import { join } from 'path';
+import * as dns from 'node:dns';
+
+// Force IPv4 over IPv6 to fix ENETUNREACH errors on Railway when sending emails
+dns.setDefaultResultOrder('ipv4first');
 
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
