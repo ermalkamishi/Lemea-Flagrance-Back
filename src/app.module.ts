@@ -37,13 +37,24 @@ import { CloudinaryModule } from './cloudinary/cloudinary.module';
             ? portRaw
             : parseInt(String(portRaw), 10) || 5432;
 
+        const databaseUrl = configService.get<string>('DATABASE_URL');
+
         return {
           type: 'postgres' as const,
-          host: configService.get<string>('POSTGRES_HOST', 'localhost'),
-          port,
-          username: configService.get<string>('POSTGRES_USER', 'postgres'),
-          password: configService.get<string>('POSTGRES_PASSWORD', 'postgres'),
-          database: configService.get<string>('POSTGRES_DB', 'lemea_db'),
+          url: databaseUrl,
+          host: !databaseUrl
+            ? configService.get<string>('POSTGRES_HOST', 'localhost')
+            : undefined,
+          port: !databaseUrl ? port : undefined,
+          username: !databaseUrl
+            ? configService.get<string>('POSTGRES_USER', 'postgres')
+            : undefined,
+          password: !databaseUrl
+            ? configService.get<string>('POSTGRES_PASSWORD', 'postgres')
+            : undefined,
+          database: !databaseUrl
+            ? configService.get<string>('POSTGRES_DB', 'lemea_db')
+            : undefined,
           entities: [__dirname + '/**/*.entity{.ts,.js}'],
           migrations: [__dirname + '/migrations/*.js'],
           migrationsRun: runMigrationsOnBoot,
@@ -52,6 +63,7 @@ import { CloudinaryModule } from './cloudinary/cloudinary.module';
             configService
               .get<string>('TYPEORM_LOGGING', 'false')
               .toLowerCase() === 'true',
+          ssl: databaseUrl ? { rejectUnauthorized: false } : false,
         };
       },
     }),
