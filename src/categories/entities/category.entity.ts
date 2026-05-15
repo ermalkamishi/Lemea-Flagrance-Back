@@ -9,7 +9,13 @@ export class Category {
   name: string;
 
   @Column({ nullable: true })
+  name_mk: string;
+
+  @Column({ nullable: true })
   description: string;
+
+  @Column({ type: 'text', nullable: true })
+  description_mk: string;
 
   @CreateDateColumn()
   createdAt: Date;
