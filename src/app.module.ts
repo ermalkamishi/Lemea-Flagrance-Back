@@ -38,23 +38,20 @@ import { CloudinaryModule } from './cloudinary/cloudinary.module';
             : parseInt(String(portRaw), 10) || 5432;
 
         const databaseUrl = configService.get<string>('DATABASE_URL');
+        const host = configService.get<string>('PGHOST') || configService.get<string>('POSTGRES_HOST', 'localhost');
+        const portNum = configService.get<number>('PGPORT') || port;
+        const username = configService.get<string>('PGUSER') || configService.get<string>('POSTGRES_USER', 'postgres');
+        const password = configService.get<string>('PGPASSWORD') || configService.get<string>('POSTGRES_PASSWORD', 'postgres');
+        const database = configService.get<string>('PGDATABASE') || configService.get<string>('POSTGRES_DB', 'lemea_db');
 
         return {
           type: 'postgres' as const,
           url: databaseUrl,
-          host: !databaseUrl
-            ? configService.get<string>('POSTGRES_HOST', 'localhost')
-            : undefined,
-          port: !databaseUrl ? port : undefined,
-          username: !databaseUrl
-            ? configService.get<string>('POSTGRES_USER', 'postgres')
-            : undefined,
-          password: !databaseUrl
-            ? configService.get<string>('POSTGRES_PASSWORD', 'postgres')
-            : undefined,
-          database: !databaseUrl
-            ? configService.get<string>('POSTGRES_DB', 'lemea_db')
-            : undefined,
+          host: !databaseUrl ? host : undefined,
+          port: !databaseUrl ? portNum : undefined,
+          username: !databaseUrl ? username : undefined,
+          password: !databaseUrl ? password : undefined,
+          database: !databaseUrl ? database : undefined,
           entities: [__dirname + '/**/*.entity{.ts,.js}'],
           migrations: [__dirname + '/migrations/*.js'],
           migrationsRun: runMigrationsOnBoot,
@@ -63,7 +60,7 @@ import { CloudinaryModule } from './cloudinary/cloudinary.module';
             configService
               .get<string>('TYPEORM_LOGGING', 'false')
               .toLowerCase() === 'true',
-          ssl: databaseUrl ? { rejectUnauthorized: false } : false,
+          ssl: (databaseUrl || configService.get<string>('PGHOST')) ? { rejectUnauthorized: false } : false,
         };
       },
     }),
