@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Repository, MoreThan } from 'typeorm';
 import { Order } from './entities/order.entity';
 import { CreateOrderDto } from './dto/create-order.dto';
 import { UpdateOrderDto } from './dto/update-order.dto';
@@ -17,25 +17,33 @@ export class OrdersService {
   ) {}
 
   async create(createOrderDto: CreateOrderDto) {
+    // Rate limiting: max 3 orders per 24 hours per IP
+    if (createOrderDto.ipAddress) {
+      const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
+      const recentOrdersCount = await this.orderRepository.count({
+        where: {
+          ipAddress: createOrderDto.ipAddress,
+          createdAt: MoreThan(twentyFourHoursAgo),
+        },
+      });
+
+      if (recentOrdersCount >= 3) {
+        throw new Error('Too many orders from this IP. Please try again later.');
+      }
+    }
+
     const order = this.orderRepository.create(createOrderDto);
     const savedOrder = await this.orderRepository.save(order);
 
     // Decrement stock for each item
     try {
-      console.log('Processing stock decrement for order items:', savedOrder.items);
       if (savedOrder.items && Array.isArray(savedOrder.items)) {
         for (const item of savedOrder.items) {
           const pid = item.productId || item.id;
-          console.log(`Checking item: ${item.name}, ID: ${pid}, Qty: ${item.quantity}`);
           if (pid) {
             await this.productsService.decrementStock(pid, item.quantity || 1);
-            console.log(`Stock decremented successfully for product ${pid}`);
-          } else {
-            console.warn('No productId or id found for item:', item);
           }
         }
-      } else {
-        console.warn('No items found or items is not an array in savedOrder');
       }
     } catch (stockError) {
       console.error('Failed to update stock:', stockError.message);

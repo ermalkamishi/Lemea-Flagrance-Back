@@ -72,6 +72,9 @@ export class Order {
   @Column({ default: 'pending' })
   status: OrderStatus;
 
+  @Column({ nullable: true })
+  ipAddress: string;
+
   @CreateDateColumn()
   createdAt: Date;
 
