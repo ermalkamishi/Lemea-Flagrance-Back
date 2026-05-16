@@ -6,31 +6,15 @@ import { CreateOrderDto } from './dto/create-order.dto';
 import { UpdateOrderDto } from './dto/update-order.dto';
 import { ProductsService } from '../products/products.service';
 import { ConfigService } from '@nestjs/config';
-import * as nodemailer from 'nodemailer';
 
 @Injectable()
 export class OrdersService {
-  private transporter: nodemailer.Transporter;
-
   constructor(
     @InjectRepository(Order)
     private readonly orderRepository: Repository<Order>,
     private readonly productsService: ProductsService,
     private readonly configService: ConfigService,
-  ) {
-    this.transporter = nodemailer.createTransport({
-      host: 'smtp.gmail.com',
-      port: 587,
-      secure: false,
-      auth: {
-        user: this.configService.get<string>('EMAIL'),
-        pass: this.configService.get<string>('EMAIL_PASS'),
-      },
-      tls: {
-        rejectUnauthorized: false
-      }
-    });
-  }
+  ) {}
 
   async create(createOrderDto: CreateOrderDto) {
     const order = this.orderRepository.create(createOrderDto);
@@ -137,16 +121,31 @@ export class OrdersService {
       </html>
     `;
 
+    const resendKey = this.configService.get<string>('RESEND_API_KEY') || process.env.RESEND_API_KEY;
+
     try {
-      await this.transporter.sendMail({
-        from: `"Lemea Flagrance" <${ownerEmail}>`,
-        to: ownerEmail,
-        subject: `🔔 Porosi e Re #${order.id.slice(0, 8)} - ${order.firstName} ${order.lastName}`,
-        html: emailHtml,
+      const response = await fetch('https://api.resend.com/emails', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${resendKey}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          from: 'Lemea Orders <onboarding@resend.dev>',
+          to: ownerEmail,
+          reply_to: order.email,
+          subject: `🔔 Porosi e Re #${order.id.slice(0, 8)} - ${order.firstName} ${order.lastName}`,
+          html: emailHtml
+        })
       });
-      console.log('Order notification email sent successfully via Nodemailer.');
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(JSON.stringify(errorData));
+      }
+      console.log('Order notification email sent successfully via Resend.');
     } catch (error) {
-      console.error('Failed to send email via Nodemailer:', error.message);
+      console.error('Failed to send email via Resend:', error.message);
     }
   }
 

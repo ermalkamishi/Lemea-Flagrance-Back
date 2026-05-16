@@ -4,30 +4,14 @@ import { Repository } from 'typeorm';
 import { Review } from './entities/review.entity';
 import { CreateReviewDto } from './dto/create-review.dto';
 import { ConfigService } from '@nestjs/config';
-import * as nodemailer from 'nodemailer';
 
 @Injectable()
 export class ReviewsService {
-  private transporter: nodemailer.Transporter;
-
   constructor(
     @InjectRepository(Review)
     private readonly reviewRepository: Repository<Review>,
     private readonly configService: ConfigService,
-  ) {
-    this.transporter = nodemailer.createTransport({
-      host: 'smtp.gmail.com',
-      port: 587,
-      secure: false,
-      auth: {
-        user: this.configService.get<string>('EMAIL'),
-        pass: this.configService.get<string>('EMAIL_PASS'),
-      },
-      tls: {
-        rejectUnauthorized: false
-      }
-    });
-  }
+  ) {}
 
   async create(createReviewDto: CreateReviewDto) {
     const review = this.reviewRepository.create(createReviewDto);
@@ -88,16 +72,30 @@ export class ReviewsService {
       </html>
     `;
 
+    const resendKey = this.configService.get<string>('RESEND_API_KEY') || process.env.RESEND_API_KEY;
+
     try {
-      await this.transporter.sendMail({
-        from: `"Lemea Reviews" <${ownerEmail}>`,
-        to: ownerEmail,
-        subject: `🌟 Vlerësim i Ri (${review.rating} Yje) - ${review.name}`,
-        html: emailHtml,
+      const response = await fetch('https://api.resend.com/emails', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${resendKey}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          from: 'Lemea Reviews <onboarding@resend.dev>',
+          to: ownerEmail,
+          subject: `🌟 Vlerësim i Ri (${review.rating} Yje) - ${review.name}`,
+          html: emailHtml
+        })
       });
-      console.log('Review notification email sent successfully.');
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(JSON.stringify(errorData));
+      }
+      console.log('Review notification email sent successfully via Resend.');
     } catch (error) {
-      console.error('Nodemailer Review Error:', error.message);
+      console.error('Resend Review Error:', error.message);
     }
   }
 
