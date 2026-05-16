@@ -1,5 +1,5 @@
 import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, ManyToOne, JoinColumn } from 'typeorm';
-import { User } from '../../users/entities/user.entity';
+import { Product } from '../../products/entities/product.entity';
 
 @Entity('reviews')
 export class Review {
@@ -17,6 +17,13 @@ export class Review {
 
   @Column({ default: true })
   isApproved: boolean; // For moderation if needed
+
+  @Column({ nullable: true })
+  productId: string;
+
+  @ManyToOne(() => Product, { onDelete: 'CASCADE' })
+  @JoinColumn({ name: 'productId' })
+  product: Product;
 
   @CreateDateColumn()
   createdAt: Date;

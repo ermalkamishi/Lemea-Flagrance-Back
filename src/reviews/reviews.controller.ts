@@ -19,6 +19,11 @@ export class ReviewsController {
     return this.reviewsService.findAll();
   }
 
+  @Get('product/:productId')
+  findByProduct(@Param('productId') productId: string) {
+    return this.reviewsService.findByProduct(productId);
+  }
+
   @UseGuards(AuthGuard('jwt'), RolesGuard)
   @Roles('admin')
   @Delete(':id')

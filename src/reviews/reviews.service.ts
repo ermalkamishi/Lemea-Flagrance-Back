@@ -106,6 +106,13 @@ export class ReviewsService {
     });
   }
 
+  findByProduct(productId: string) {
+    return this.reviewRepository.find({
+      where: { productId, isApproved: true },
+      order: { createdAt: 'DESC' },
+    });
+  }
+
   remove(id: string) {
     return this.reviewRepository.delete(id);
   }

@@ -74,6 +74,7 @@ export class InitialSchema1739120400000 implements MigrationInterface {
         "totalAmount" numeric(10,2) NOT NULL,
         "paymentMethod" character varying NOT NULL DEFAULT 'cod',
         "status" character varying NOT NULL DEFAULT 'pending',
+        "ipAddress" character varying,
         "createdAt" TIMESTAMPTZ NOT NULL DEFAULT now(),
         "updatedAt" TIMESTAMPTZ NOT NULL DEFAULT now(),
         CONSTRAINT "PK_orders_id" PRIMARY KEY ("id"),
