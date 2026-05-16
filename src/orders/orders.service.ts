@@ -22,13 +22,20 @@ export class OrdersService {
 
     // Decrement stock for each item
     try {
+      console.log('Processing stock decrement for order items:', savedOrder.items);
       if (savedOrder.items && Array.isArray(savedOrder.items)) {
         for (const item of savedOrder.items) {
           const pid = item.productId || item.id;
+          console.log(`Checking item: ${item.name}, ID: ${pid}, Qty: ${item.quantity}`);
           if (pid) {
             await this.productsService.decrementStock(pid, item.quantity || 1);
+            console.log(`Stock decremented successfully for product ${pid}`);
+          } else {
+            console.warn('No productId or id found for item:', item);
           }
         }
+      } else {
+        console.warn('No items found or items is not an array in savedOrder');
       }
     } catch (stockError) {
       console.error('Failed to update stock:', stockError.message);
