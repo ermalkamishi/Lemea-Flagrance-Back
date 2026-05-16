@@ -11,7 +11,7 @@ export class InitialSchema1739120400000 implements MigrationInterface {
     await queryRunner.query(`CREATE EXTENSION IF NOT EXISTS "uuid-ossp"`);
 
     await queryRunner.query(`
-      CREATE TABLE "users" (
+      CREATE TABLE IF NOT EXISTS "users" (
         "id" uuid NOT NULL DEFAULT uuid_generate_v4(),
         "fullName" character varying,
         "email" character varying NOT NULL,
@@ -27,7 +27,7 @@ export class InitialSchema1739120400000 implements MigrationInterface {
     `);
 
     await queryRunner.query(`
-      CREATE TABLE "categories" (
+      CREATE TABLE IF NOT EXISTS "categories" (
         "id" uuid NOT NULL DEFAULT uuid_generate_v4(),
         "name" character varying NOT NULL,
         "description" character varying,
@@ -38,7 +38,7 @@ export class InitialSchema1739120400000 implements MigrationInterface {
     `);
 
     await queryRunner.query(`
-      CREATE TABLE "products" (
+      CREATE TABLE IF NOT EXISTS "products" (
         "id" uuid NOT NULL DEFAULT uuid_generate_v4(),
         "name" character varying NOT NULL,
         "description" text,
@@ -62,7 +62,7 @@ export class InitialSchema1739120400000 implements MigrationInterface {
     `);
 
     await queryRunner.query(`
-      CREATE TABLE "orders" (
+      CREATE TABLE IF NOT EXISTS "orders" (
         "id" uuid NOT NULL DEFAULT uuid_generate_v4(),
         "userId" uuid,
         "firstName" character varying NOT NULL,
@@ -82,7 +82,7 @@ export class InitialSchema1739120400000 implements MigrationInterface {
     `);
 
     await queryRunner.query(`
-      CREATE TABLE "reviews" (
+      CREATE TABLE IF NOT EXISTS "reviews" (
         "id" uuid NOT NULL DEFAULT uuid_generate_v4(),
         "name" character varying NOT NULL,
         "rating" integer NOT NULL,
