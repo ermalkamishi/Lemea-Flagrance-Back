@@ -1,25 +1,9 @@
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import * as nodemailer from 'nodemailer';
 
 @Injectable()
 export class ContactService {
-  private transporter: nodemailer.Transporter;
-
-  constructor(private readonly configService: ConfigService) {
-    this.transporter = nodemailer.createTransport({
-      host: 'smtp.gmail.com',
-      port: 587,
-      secure: false,
-      auth: {
-        user: this.configService.get<string>('EMAIL'),
-        pass: this.configService.get<string>('EMAIL_PASS'),
-      },
-      tls: {
-        rejectUnauthorized: false
-      }
-    });
-  }
+  constructor(private readonly configService: ConfigService) {}
 
   async sendContactEmail(values: { name: string; email: string; subject: string; message: string }) {
     const ownerEmail = this.configService.get<string>('EMAIL');
@@ -66,12 +50,34 @@ export class ContactService {
       </html>
     `;
 
-    return await this.transporter.sendMail({
-      from: `"Lemea Contact" <${ownerEmail}>`,
-      to: ownerEmail,
-      subject: `📧 Mesazh i Ri: ${values.subject}`,
-      html: emailHtml,
-      replyTo: values.email,
-    });
+    const resendKey = this.configService.get<string>('RESEND_API_KEY') || process.env.RESEND_API_KEY;
+
+    try {
+      const response = await fetch('https://api.resend.com/emails', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${resendKey}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          from: 'Lemea Contact <onboarding@resend.dev>',
+          to: ownerEmail,
+          reply_to: values.email,
+          subject: `📧 Mesazh i Ri: ${values.subject}`,
+          html: emailHtml
+        })
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(JSON.stringify(errorData));
+      }
+      
+      console.log('Contact email sent successfully via Resend');
+      return true;
+    } catch (error) {
+      console.error('Failed to send contact email via Resend:', error.message);
+      throw error;
+    }
   }
 }
