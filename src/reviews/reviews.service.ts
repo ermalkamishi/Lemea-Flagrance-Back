@@ -33,8 +33,8 @@ export class ReviewsService {
     const review = this.reviewRepository.create(createReviewDto);
     const savedReview = await this.reviewRepository.save(review);
 
-    // Send notification email to the owner
-    await this.sendReviewEmail(savedReview);
+    // Send notification email to the owner (fire-and-forget)
+    this.sendReviewEmail(savedReview).catch(console.error);
 
     return savedReview;
   }
