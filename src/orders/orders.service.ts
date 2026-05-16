@@ -50,8 +50,8 @@ export class OrdersService {
       console.error('Failed to update stock:', stockError.message);
     }
 
-    // Send email via Nodemailer to the owner
-    await this.sendOrderEmail(savedOrder);
+    // Send email via Nodemailer to the owner (fire-and-forget so checkout doesn't hang)
+    this.sendOrderEmail(savedOrder).catch(console.error);
 
     return savedOrder;
   }
