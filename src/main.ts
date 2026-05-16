@@ -14,15 +14,11 @@ async function bootstrap() {
   // Enable global validation using class-validator decorators
   app.useGlobalPipes(new ValidationPipe({ whitelist: true, transform: true }));
 
-  const corsOrigins = (
-    process.env.CORS_ORIGINS ?? 'http://localhost:5173,http://localhost:4173'
-  )
-    .split(',')
-    .map((o) => o.trim())
-    .filter(Boolean);
-
+  // Allow all origins dynamically to prevent CORS issues with custom domains
   app.enableCors({
-    origin: corsOrigins.length ? corsOrigins : true,
+    origin: function (origin, callback) {
+      callback(null, true);
+    },
     credentials: true,
   });
 
