@@ -11,8 +11,9 @@ export class OrdersController {
   constructor(private readonly ordersService: OrdersService) {}
 
   @Post()
-  create(@Body() createOrderDto: CreateOrderDto) {
-    return this.ordersService.create(createOrderDto);
+  create(@Body() createOrderDto: CreateOrderDto, @Request() req: any) {
+    const ip = req.ip || req.headers['x-forwarded-for'] || req.connection.remoteAddress;
+    return this.ordersService.create({ ...createOrderDto, ipAddress: ip });
   }
 
   @UseGuards(AuthGuard('jwt'), RolesGuard)
