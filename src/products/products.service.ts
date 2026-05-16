@@ -33,15 +33,20 @@ export class ProductsService {
   }
 
   async decrementStock(productId: string, quantity: number) {
+    console.log(`decrementStock called for ID: ${productId}, Qty: ${quantity}`);
     const product = await this.productRepository.findOne({
       where: { id: productId },
     });
     if (product) {
+      console.log(`Found product: ${product.name}, Current Stock: ${product.stockQuantity}`);
       product.stockQuantity = Math.max(0, product.stockQuantity - quantity);
       if (product.stockQuantity === 0) {
         product.inStock = false;
       }
       await this.productRepository.save(product);
+      console.log(`Updated stock for ${product.name} to ${product.stockQuantity}`);
+    } else {
+      console.error(`Product with ID ${productId} not found in database!`);
     }
   }
 }
