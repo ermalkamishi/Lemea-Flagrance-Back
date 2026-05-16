@@ -9,8 +9,8 @@ export class ContactService {
   constructor(private readonly configService: ConfigService) {
     this.transporter = nodemailer.createTransport({
       host: 'smtp.gmail.com',
-      port: 465,
-      secure: true,
+      port: 587,
+      secure: false,
       auth: {
         user: this.configService.get<string>('EMAIL'),
         pass: this.configService.get<string>('EMAIL_PASS'),
