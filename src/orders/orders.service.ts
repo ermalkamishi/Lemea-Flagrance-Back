@@ -133,7 +133,6 @@ export class OrdersService {
         body: JSON.stringify({
           from: 'Lemea Orders <onboarding@resend.dev>',
           to: ownerEmail,
-          reply_to: order.email,
           subject: `🔔 Porosi e Re #${order.id.slice(0, 8)} - ${order.firstName} ${order.lastName}`,
           html: emailHtml
         })
