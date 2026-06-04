@@ -10,6 +10,7 @@ import {
   UploadedFile,
   UseGuards,
 } from '@nestjs/common';
+import { ApiTags, ApiBearerAuth, ApiOperation, ApiConsumes } from '@nestjs/swagger';
 import { AuthGuard } from '@nestjs/passport';
 import { RolesGuard } from '../auth/roles.guard';
 import { Roles } from '../auth/roles.decorator';
@@ -20,6 +21,7 @@ import { CloudinaryService } from '../cloudinary/cloudinary.service';
 import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
 
+@ApiTags('products')
 @Controller('products')
 export class ProductsController {
   constructor(
@@ -27,9 +29,12 @@ export class ProductsController {
     private readonly cloudinaryService: CloudinaryService,
   ) {}
 
+  @ApiBearerAuth()
   @UseGuards(AuthGuard('jwt'), RolesGuard)
   @Roles('admin')
   @Post()
+  @ApiOperation({ summary: 'Create a new product' })
+  @ApiConsumes('multipart/form-data')
   @UseInterceptors(FileInterceptor('image', { storage: memoryStorage() }))
   async create(@Body() createProductDto: CreateProductDto, @UploadedFile() file: any) {
     let imageUrl = createProductDto.image;
@@ -47,18 +52,23 @@ export class ProductsController {
   }
 
   @Get()
+  @ApiOperation({ summary: 'List all products' })
   findAll() {
     return this.productsService.findAll();
   }
 
   @Get(':id')
+  @ApiOperation({ summary: 'Get product by id' })
   findOne(@Param('id') id: string) {
     return this.productsService.findOne(id);
   }
 
+  @ApiBearerAuth()
   @UseGuards(AuthGuard('jwt'), RolesGuard)
   @Roles('admin')
   @Patch(':id')
+  @ApiOperation({ summary: 'Update a product' })
+  @ApiConsumes('multipart/form-data')
   @UseInterceptors(FileInterceptor('image', { storage: memoryStorage() }))
   async update(
     @Param('id') id: string,
@@ -87,10 +97,12 @@ export class ProductsController {
     return this.productsService.update(id, cleanData);
   }
 
+  @ApiBearerAuth()
   @UseGuards(AuthGuard('jwt'), RolesGuard)
   @Roles('admin')
   @Delete(':id')
+  @ApiOperation({ summary: 'Delete a product' })
   remove(@Param('id') id: string) {
     return this.productsService.remove(id);
   }
-}
+}
