@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Review } from './entities/review.entity';
+import { Product } from '../products/entities/product.entity';
 import { CreateReviewDto } from './dto/create-review.dto';
 import { ConfigService } from '@nestjs/config';
 
@@ -10,6 +11,8 @@ export class ReviewsService {
   constructor(
     @InjectRepository(Review)
     private readonly reviewRepository: Repository<Review>,
+    @InjectRepository(Product)
+    private readonly productRepository: Repository<Product>,
     private readonly configService: ConfigService,
   ) {}
 
@@ -17,14 +20,37 @@ export class ReviewsService {
     const review = this.reviewRepository.create(createReviewDto);
     const savedReview = await this.reviewRepository.save(review);
 
+    if (savedReview.productId) {
+      await this.updateProductRating(savedReview.productId);
+    }
+
     // Send notification email to the owner (fire-and-forget)
     this.sendReviewEmail(savedReview).catch(console.error);
 
     return savedReview;
   }
 
+  private async updateProductRating(productId: string) {
+    try {
+      const reviews = await this.reviewRepository.find({
+        where: { productId, isApproved: true },
+      });
+      if (reviews.length > 0) {
+        const sum = reviews.reduce((acc, r) => acc + Number(r.rating || 0), 0);
+        const avg = Math.round((sum / reviews.length) * 10) / 10;
+        await this.productRepository.update(productId, {
+          rating: avg,
+          reviewsCount: reviews.length,
+        });
+      }
+    } catch (e) {
+      console.error('Error updating product rating:', e);
+    }
+  }
+
   private async sendReviewEmail(review: Review) {
     const ownerEmail = this.configService.get<string>('EMAIL');
+    if (!ownerEmail) return;
 
     const stars = '⭐'.repeat(review.rating);
 
