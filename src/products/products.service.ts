@@ -24,6 +24,32 @@ export class ProductsService {
     return this.productRepository.findOne({ where: { id } });
   }
 
+  findBySlug(slug: string) {
+    const normalized = slug.replace(/[-_]+/g, ' ').trim();
+    return this.productRepository
+      .createQueryBuilder('product')
+      .where('LOWER(product.name) = LOWER(:normalized)', { normalized })
+      .orWhere('LOWER(product.name) LIKE LOWER(:likePattern)', {
+        likePattern: `%${normalized}%`,
+      })
+      .getOne();
+  }
+
+  async findByIdOrSlug(idOrSlug: string): Promise<Product | null> {
+    const isUuid =
+      /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{8}-[0-9a-f]{12}$/i.test(
+        idOrSlug,
+      ) ||
+      /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(
+        idOrSlug,
+      );
+
+    if (isUuid) {
+      return this.findOne(idOrSlug);
+    }
+    return this.findBySlug(idOrSlug);
+  }
+
   update(id: string, updateProductDto: UpdateProductDto) {
     return this.productRepository.update(id, updateProductDto);
   }
