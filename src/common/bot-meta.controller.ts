@@ -85,7 +85,7 @@ export class BotMetaController {
     // 4. Construct metadata fields
     const productTitle = product.title || product.name || 'Produkt';
     const price = product.price != null ? product.price : '';
-    const fallbackDesc = `${productTitle} në Lemea Fragrance. Bli online me çmimin më të mirë prej ${price} Den.`;
+    const fallbackDesc = `${productTitle} në Lemea Flagrance. Bli online me çmimin më të mirë prej ${price} Den.`;
     const description = cleanDescription(
       product.description || product.description_mk,
       fallbackDesc,
@@ -104,7 +104,7 @@ export class BotMetaController {
     }
 
     const titleWithPrice = `${productTitle} - ${price} Den`;
-    const pageTitle = `${titleWithPrice} | Lemea Fragrance`;
+    const pageTitle = `${titleWithPrice} | Lemea Flagrance`;
     const ogUrl = `https://www.lemeaflagrance.shop/produktet/${id}`;
 
     // 5. Construct clean HTML string with OpenGraph and Twitter meta tags
@@ -122,7 +122,7 @@ export class BotMetaController {
   <meta property="og:title" content="${escapeHtml(titleWithPrice)}">
   <meta property="og:description" content="${escapeHtml(description)}">
   <meta property="og:image" content="${escapeHtml(imageUrl)}">
-  <meta property="og:site_name" content="Lemea Fragrance">
+  <meta property="og:site_name" content="Lemea Flagrance">
   <meta property="product:price:amount" content="${escapeHtml(price)}">
   <meta property="product:price:currency" content="MKD">
 

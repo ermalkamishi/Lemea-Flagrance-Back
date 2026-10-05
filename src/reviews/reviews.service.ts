@@ -91,7 +91,7 @@ export class ReviewsService {
             </p>
           </div>
           <div class="footer">
-            <p>&copy; 2024 Lemea Fragrance Dashboard. Feedback-u i klientëve është çelësi i suksesit!</p>
+            <p>&copy; 2024 Lemea Flagrance Dashboard. Feedback-u i klientëve është çelësi i suksesit!</p>
           </div>
         </div>
       </body>

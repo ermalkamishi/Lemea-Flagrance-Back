@@ -43,7 +43,7 @@ export class ContactService {
             </div>
           </div>
           <div class="footer">
-            <p>Kjo është një dërgesë automatike nga forma e kontaktit në Lemea Fragrance.</p>
+            <p>Kjo është një dërgesë automatike nga forma e kontaktit në Lemea Flagrance.</p>
           </div>
         </div>
       </body>

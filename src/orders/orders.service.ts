@@ -86,7 +86,7 @@ export class OrdersService {
       <body>
         <div class="container">
           <div class="header">
-            <h1 style="margin: 0; font-size: 24px; letter-spacing: 2px; color: white;">LEMEA FRAGRANCE</h1>
+            <h1 style="margin: 0; font-size: 24px; letter-spacing: 2px; color: white;">LEMEA FLAGRANCE</h1>
             <p style="margin: 10px 0 0 0; opacity: 0.9; color: white;">Porosi e Re e Marrë!</p>
           </div>
           <div class="content">
@@ -121,7 +121,7 @@ export class OrdersService {
             </div>
           </div>
           <div class="footer">
-            <p>&copy; ${new Date().getFullYear()} Lemea Fragrance. Ky është një email automatik për njoftimin e porosive.</p>
+            <p>&copy; ${new Date().getFullYear()} Lemea Flagrance. Ky është një email automatik për njoftimin e porosive.</p>
           </div>
         </div>
       </body>

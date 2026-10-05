@@ -111,7 +111,7 @@ describe('BotMetaMiddleware', () => {
     expect(res.status).toHaveBeenCalledWith(200);
 
     const html = res._getData();
-    expect(html).toContain('<title>Bleu de Chanel - 4500 Den | Lemea Fragrance</title>');
+    expect(html).toContain('<title>Bleu de Chanel - 4500 Den | Lemea Flagrance</title>');
     expect(html).toContain('<meta property="og:title" content="Bleu de Chanel - 4500 Den">');
     expect(html).toContain('<meta property="og:description" content="Luks dhe freski aromatike.">');
     expect(html).toContain('<meta property="og:image" content="https://res.cloudinary.com/test/image.jpg">');

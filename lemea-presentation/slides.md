@@ -6,10 +6,10 @@ highlighter: shiki
 drawings:
   persist: false
 transition: slide-left
-title: Lemea Fragrance Backend Architecture
+title: Lemea Flagrance Backend Architecture
 ---
 
-# Lemea Fragrance
+# Lemea Flagrance
 ### Backend Architecture & API Overview
 <div class="text-sm opacity-50 mt-4">A Deep Dive into the Code Flow, Auth, and Key Features</div>
 
@@ -251,7 +251,7 @@ class: text-center
   </h1>
   
   <p class="text-xl text-gray-300 max-w-2xl text-center leading-relaxed">
-    Thank you for your time and attention. We appreciate the opportunity to share the backend architecture of Lemea Fragrance with you today!
+    Thank you for your time and attention. We appreciate the opportunity to share the backend architecture of Lemea Flagrance with you today!
   </p>
   
   <div class="flex items-center gap-4 mt-8">

@@ -77,7 +77,7 @@ export class BotMetaMiddleware implements NestMiddleware {
       // 5. Build metadata fields
       const productTitle = (product as any).title || product.name || 'Produkt';
       const price = product.price != null ? product.price : '';
-      const fallbackDesc = `${productTitle} në Lemea Fragrance. Bli online me çmimin më të mirë prej ${price} Den.`;
+      const fallbackDesc = `${productTitle} në Lemea Flagrance. Bli online me çmimin më të mirë prej ${price} Den.`;
       const description = cleanDescription(
         product.description || (product as any).description_mk,
         fallbackDesc,
@@ -97,7 +97,7 @@ export class BotMetaMiddleware implements NestMiddleware {
 
       const fullUrl = `https://www.lemeaflagrance.shop${req.path}`;
       const titleWithPrice = `${productTitle} - ${price} Den`;
-      const pageTitle = `${titleWithPrice} | Lemea Fragrance`;
+      const pageTitle = `${titleWithPrice} | Lemea Flagrance`;
 
       // 6. Generate clean HTML string formatted with proper OG and Twitter meta tags
       const html = `<!DOCTYPE html>
@@ -114,7 +114,7 @@ export class BotMetaMiddleware implements NestMiddleware {
   <meta property="og:title" content="${escapeHtml(titleWithPrice)}">
   <meta property="og:description" content="${escapeHtml(description)}">
   <meta property="og:image" content="${escapeHtml(imageUrl)}">
-  <meta property="og:site_name" content="Lemea Fragrance">
+  <meta property="og:site_name" content="Lemea Flagrance">
   <meta property="product:price:amount" content="${escapeHtml(price)}">
   <meta property="product:price:currency" content="MKD">
 
