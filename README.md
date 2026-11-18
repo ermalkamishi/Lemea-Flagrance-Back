@@ -10,7 +10,7 @@ Backend REST API for **Lemea Fragrance**, built with [NestJS](https://nestjs.com
 - **Database:** PostgreSQL with TypeORM
 - **Authentication:** JWT (JSON Web Tokens) with Passport
 - **Media Uploads:** Cloudinary API
-- **Emails:** Resend HTTP API & Nodemailer (SMTP fallback)
+- **Emails:** Resend HTTP API
 - **API Documentation:** Swagger / OpenAPI
 - **Validation:** `class-validator` & `class-transformer`
 
@@ -75,7 +75,6 @@ CLOUDINARY_API_SECRET=your_cloudinary_api_secret
 
 # Email & Notifications (Resend / SMTP)
 EMAIL=your_email@example.com
-EMAIL_PASS=your_email_password
 RESEND_API_KEY=re_your_resend_api_key
 ```
 
