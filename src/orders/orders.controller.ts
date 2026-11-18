@@ -6,6 +6,7 @@ import { UpdateOrderDto } from './dto/update-order.dto';
 import { AuthGuard } from '@nestjs/passport';
 import { RolesGuard } from '../auth/roles.guard';
 import { Roles } from '../auth/roles.decorator';
+import { OptionalJwtAuthGuard } from '../auth/optional-jwt-auth.guard';
 
 @ApiTags('orders')
 @Controller('orders')
@@ -13,10 +14,17 @@ export class OrdersController {
   constructor(private readonly ordersService: OrdersService) {}
 
   @Post()
-  @ApiOperation({ summary: 'Create a new order' })
+  @UseGuards(OptionalJwtAuthGuard)
+  @ApiOperation({ summary: 'Create a new order (guest or logged-in user)' })
   create(@Body() createOrderDto: CreateOrderDto, @Request() req: any) {
-    const ip = req.ip || req.headers['x-forwarded-for'] || req.connection.remoteAddress;
-    return this.ordersService.create({ ...createOrderDto, ipAddress: ip });
+    // req.ip is the real client IP because 'trust proxy' is enabled in main.ts
+    const ip = req.ip || req.socket?.remoteAddress;
+    // Never trust a userId sent by the client: take it from the verified JWT (or none for guests)
+    return this.ordersService.create({
+      ...createOrderDto,
+      userId: req.user?.id ?? undefined,
+      ipAddress: ip,
+    });
   }
 
   @ApiBearerAuth()

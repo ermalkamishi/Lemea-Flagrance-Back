@@ -1,8 +1,9 @@
-import { IsNotEmpty, IsString, IsNumber, IsArray, IsOptional, IsEnum } from 'class-validator';
+import { IsNotEmpty, IsString, IsNumber, IsArray, IsOptional, ArrayNotEmpty, Min } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 export class CreateOrderDto {
-  @ApiPropertyOptional({ example: 'uuid-string', description: 'User ID if logged in' })
+  // Ignored on create: the server sets userId from the JWT. Kept so old clients don't get a 400.
+  @ApiPropertyOptional({ example: 'uuid-string', description: 'Ignored – set from the auth token' })
   @IsOptional()
   @IsString()
   userId?: string;
@@ -33,13 +34,14 @@ export class CreateOrderDto {
   address: string;
 
   @ApiProperty({ example: [{ productId: 'uuid', quantity: 2, price: 120.5 }], description: 'Array of order items' })
-  @IsNotEmpty()
   @IsArray()
+  @ArrayNotEmpty()
   items: any[];
 
   @ApiProperty({ example: 241.0, description: 'Total amount of the order' })
   @IsNotEmpty()
   @IsNumber()
+  @Min(0)
   totalAmount: number;
 
   @ApiPropertyOptional({ example: 'cash_on_delivery', description: 'Payment method chosen' })

@@ -5,6 +5,9 @@ import { Product } from './entities/product.entity';
 import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
 
+const UUID_REGEX =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
 @Injectable()
 export class ProductsService {
   constructor(
@@ -36,15 +39,7 @@ export class ProductsService {
   }
 
   async findByIdOrSlug(idOrSlug: string): Promise<Product | null> {
-    const isUuid =
-      /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{8}-[0-9a-f]{12}$/i.test(
-        idOrSlug,
-      ) ||
-      /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(
-        idOrSlug,
-      );
-
-    if (isUuid) {
+    if (UUID_REGEX.test(idOrSlug)) {
       return this.findOne(idOrSlug);
     }
     return this.findBySlug(idOrSlug);
@@ -58,16 +53,25 @@ export class ProductsService {
     return this.productRepository.delete(id);
   }
 
+  /**
+   * Atomically decrements stock in a single UPDATE so two simultaneous orders
+   * can't both read the same old value and overwrite each other.
+   * Stock never goes below 0, and the product is marked out of stock when it hits 0.
+   */
   async decrementStock(productId: string, quantity: number) {
-    const product = await this.productRepository.findOne({
-      where: { id: productId },
-    });
-    if (product) {
-      product.stockQuantity = Math.max(0, product.stockQuantity - quantity);
-      if (product.stockQuantity === 0) {
-        product.inStock = false;
-      }
-      await this.productRepository.save(product);
+    const qty = Math.floor(Number(quantity));
+    if (!UUID_REGEX.test(productId) || !Number.isFinite(qty) || qty <= 0) {
+      return;
     }
+    await this.productRepository
+      .createQueryBuilder()
+      .update(Product)
+      .set({
+        stockQuantity: () => 'GREATEST("stockQuantity" - :qty, 0)',
+        inStock: () => 'CASE WHEN "stockQuantity" - :qty <= 0 THEN false ELSE "inStock" END',
+      })
+      .where('id = :id', { id: productId })
+      .setParameter('qty', qty)
+      .execute();
   }
 }

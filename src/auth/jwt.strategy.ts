@@ -18,7 +18,8 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
   }
 
   async validate(payload: any) {
-    const user = await this.usersService.findOneByEmail(payload.email);
+    // Look up by id (the token subject) — this query does not load the password hash
+    const user = payload?.sub ? await this.usersService.findOne(payload.sub) : null;
     if (!user) {
       throw new UnauthorizedException();
     }

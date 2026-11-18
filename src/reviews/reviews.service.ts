@@ -5,6 +5,10 @@ import { Review } from './entities/review.entity';
 import { Product } from '../products/entities/product.entity';
 import { CreateReviewDto } from './dto/create-review.dto';
 import { ConfigService } from '@nestjs/config';
+import { escapeHtml } from '../common/escape-html';
+
+const UUID_REGEX =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 @Injectable()
 export class ReviewsService {
@@ -35,14 +39,12 @@ export class ReviewsService {
       const reviews = await this.reviewRepository.find({
         where: { productId, isApproved: true },
       });
-      if (reviews.length > 0) {
-        const sum = reviews.reduce((acc, r) => acc + Number(r.rating || 0), 0);
-        const avg = Math.round((sum / reviews.length) * 10) / 10;
-        await this.productRepository.update(productId, {
-          rating: avg,
-          reviewsCount: reviews.length,
-        });
-      }
+      const sum = reviews.reduce((acc, r) => acc + Number(r.rating || 0), 0);
+      const avg = reviews.length > 0 ? Math.round((sum / reviews.length) * 10) / 10 : 0;
+      await this.productRepository.update(productId, {
+        rating: avg,
+        reviewsCount: reviews.length,
+      });
     } catch (e) {
       console.error('Error updating product rating:', e);
     }
@@ -80,10 +82,10 @@ export class ReviewsService {
           </div>
           <div class="content">
             <div class="review-box">
-              <span class="badge">KLIENTI: ${review.name}</span>
+              <span class="badge">KLIENTI: ${escapeHtml(review.name)}</span>
               <div class="stars">${stars}</div>
               <h2 style="margin: 10px 0; color: #fb923c;">Vlerësimi: ${review.rating}/5</h2>
-              ${review.comment ? `<div class="comment">"${review.comment}"</div>` : '<p style="color: #9ca3af;">Pa koment.</p>'}
+              ${review.comment ? `<div class="comment">"${escapeHtml(review.comment)}"</div>` : '<p style="color: #9ca3af;">Pa koment.</p>'}
             </div>
             
             <p style="text-align: center; color: #666; font-size: 14px;">
@@ -91,14 +93,18 @@ export class ReviewsService {
             </p>
           </div>
           <div class="footer">
-            <p>&copy; 2024 Lemea Flagrance Dashboard. Feedback-u i klientëve është çelësi i suksesit!</p>
+            <p>&copy; ${new Date().getFullYear()} Lemea Flagrance Dashboard. Feedback-u i klientëve është çelësi i suksesit!</p>
           </div>
         </div>
       </body>
       </html>
     `;
 
-    const resendKey = this.configService.get<string>('RESEND_API_KEY') || process.env.RESEND_API_KEY;
+    const resendKey = this.configService.get<string>('RESEND_API_KEY');
+    if (!resendKey) {
+      console.warn('RESEND_API_KEY not set; skipping review notification email.');
+      return;
+    }
 
     try {
       const response = await fetch('https://api.resend.com/emails', {
@@ -133,13 +139,21 @@ export class ReviewsService {
   }
 
   findByProduct(productId: string) {
+    // Non-UUID ids (e.g. slugs) would make Postgres throw a 500
+    if (!UUID_REGEX.test(productId)) return [];
     return this.reviewRepository.find({
       where: { productId, isApproved: true },
       order: { createdAt: 'DESC' },
     });
   }
 
-  remove(id: string) {
-    return this.reviewRepository.delete(id);
+  async remove(id: string) {
+    const review = await this.reviewRepository.findOne({ where: { id } });
+    const result = await this.reviewRepository.delete(id);
+    // Keep the product's average rating / count in sync after a deletion
+    if (review?.productId) {
+      await this.updateProductRating(review.productId);
+    }
+    return result;
   }
 }

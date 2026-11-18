@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { escapeHtml } from '../common/escape-html';
 
 @Injectable()
 export class ContactService {
@@ -33,13 +34,13 @@ export class ContactService {
           <div class="content">
             <div class="info-box">
               <span class="label">Nga:</span>
-              <span class="value">${values.name} (${values.email})</span>
+              <span class="value">${escapeHtml(values.name)} (${escapeHtml(values.email)})</span>
               
               <span class="label">Subjekti:</span>
-              <span class="value">${values.subject}</span>
+              <span class="value">${escapeHtml(values.subject)}</span>
               
               <span class="label">Mesazhi:</span>
-              <div class="message-content">"${values.message}"</div>
+              <div class="message-content">"${escapeHtml(values.message)}"</div>
             </div>
           </div>
           <div class="footer">

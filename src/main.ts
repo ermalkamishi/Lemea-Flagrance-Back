@@ -15,10 +15,21 @@ async function bootstrap() {
   // Enable global validation using class-validator decorators
   app.useGlobalPipes(new ValidationPipe({ whitelist: true, transform: true }));
 
-  // Allow all origins dynamically to prevent CORS issues with custom domains
+  // Railway sits behind a reverse proxy: trust it so req.ip is the real client IP
+  app.set('trust proxy', 1);
+
+  // CORS: if CORS_ORIGINS is set (comma-separated), only those origins are allowed.
+  // If it is not set, all origins are allowed (previous behaviour).
+  const allowedOrigins = (process.env.CORS_ORIGINS ?? '')
+    .split(',')
+    .map((o) => o.trim().replace(/\/+$/, ''))
+    .filter(Boolean);
   app.enableCors({
-    origin: function (origin, callback) {
-      callback(null, true);
+    origin: (origin, callback) => {
+      if (!origin || allowedOrigins.length === 0 || allowedOrigins.includes(origin)) {
+        return callback(null, true);
+      }
+      return callback(null, false);
     },
     credentials: true,
   });

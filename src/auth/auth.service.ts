@@ -40,13 +40,7 @@ export class AuthService {
       throw new ConflictException('Email already in use');
     }
     
-    const hashedPassword = await bcrypt.hash(createUserDto.password, 10);
-    const user = await this.usersService.create({
-      ...createUserDto,
-      password: hashedPassword,
-    });
-    
-    const { password, ...result } = user;
-    return result;
+    // UsersService.create hashes the password and strips it from the result
+    return this.usersService.create(createUserDto);
   }
 }

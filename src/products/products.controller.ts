@@ -9,6 +9,7 @@ import {
   UseInterceptors,
   UploadedFile,
   UseGuards,
+  NotFoundException,
 } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth, ApiOperation, ApiConsumes } from '@nestjs/swagger';
 import { AuthGuard } from '@nestjs/passport';
@@ -58,9 +59,14 @@ export class ProductsController {
   }
 
   @Get(':id')
-  @ApiOperation({ summary: 'Get product by id' })
-  findOne(@Param('id') id: string) {
-    return this.productsService.findOne(id);
+  @ApiOperation({ summary: 'Get product by id or slug' })
+  async findOne(@Param('id') id: string) {
+    // Accepts a UUID or a name slug; returns 404 instead of a Postgres "invalid uuid" 500
+    const product = await this.productsService.findByIdOrSlug(id);
+    if (!product) {
+      throw new NotFoundException('Product not found');
+    }
+    return product;
   }
 
   @ApiBearerAuth()
@@ -85,9 +91,6 @@ export class ProductsController {
       ...(imageUrl ? { image: imageUrl, images: [imageUrl] } : {}),
     };
 
-    console.log('Update Received:', updateProductDto);
-    console.log('Final Data for TypeORM:', productData);
-
     // Remove undefined fields to avoid overwriting with null in TypeORM
     const cleanData: any = { ...productData };
     Object.keys(cleanData).forEach((key) => {
@@ -105,4 +108,4 @@ export class ProductsController {
   remove(@Param('id') id: string) {
     return this.productsService.remove(id);
   }
-}
+}

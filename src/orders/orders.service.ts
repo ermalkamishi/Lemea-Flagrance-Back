@@ -6,6 +6,7 @@ import { CreateOrderDto } from './dto/create-order.dto';
 import { UpdateOrderDto } from './dto/update-order.dto';
 import { ProductsService } from '../products/products.service';
 import { ConfigService } from '@nestjs/config';
+import { escapeHtml } from '../common/escape-html';
 
 @Injectable()
 export class OrdersService {
@@ -20,28 +21,25 @@ export class OrdersService {
     const order = this.orderRepository.create(createOrderDto);
     const savedOrder = await this.orderRepository.save(order);
 
-    // Decrement stock for each item
-    try {
-      console.log('Processing stock decrement for order items:', savedOrder.items);
-      if (savedOrder.items && Array.isArray(savedOrder.items)) {
-        for (const item of savedOrder.items) {
-          const pid = item.productId || item.id;
-          console.log(`Checking item: ${item.name}, ID: ${pid}, Qty: ${item.quantity}`);
-          if (pid) {
-            await this.productsService.decrementStock(pid, item.quantity || 1);
-            console.log(`Stock decremented successfully for product ${pid}`);
-          } else {
-            console.warn('No productId or id found for item:', item);
-          }
+    // Decrement stock for each item. Each item is handled on its own so one bad
+    // item does not stop the stock update for the rest of the order.
+    if (Array.isArray(savedOrder.items)) {
+      for (const item of savedOrder.items) {
+        const pid = item?.productId || item?.id;
+        const qty = Math.floor(Number(item?.quantity ?? 1));
+        if (!pid || !Number.isFinite(qty) || qty <= 0) {
+          console.warn('Skipping stock decrement for invalid item:', item);
+          continue;
         }
-      } else {
-        console.warn('No items found or items is not an array in savedOrder');
+        try {
+          await this.productsService.decrementStock(String(pid), qty);
+        } catch (stockError) {
+          console.error(`Failed to update stock for product ${pid}:`, stockError?.message);
+        }
       }
-    } catch (stockError) {
-      console.error('Failed to update stock:', stockError.message);
     }
 
-    // Send email via Nodemailer to the owner (fire-and-forget so checkout doesn't hang)
+    // Send email via Resend to the owner (fire-and-forget so checkout doesn't hang)
     this.sendOrderEmail(savedOrder).catch(console.error);
 
     return savedOrder;
@@ -55,11 +53,11 @@ export class OrdersService {
         (item) => `
       <tr style="border-bottom: 1px solid #eee;">
         <td style="padding: 12px; text-align: left;">
-          <div style="font-weight: bold; color: #333;">${item.name}</div>
-          <div style="font-size: 12px; color: #666;">Sasia: ${item.quantity}</div>
+          <div style="font-weight: bold; color: #333;">${escapeHtml(item.name)}</div>
+          <div style="font-size: 12px; color: #666;">Sasia: ${escapeHtml(item.quantity)}</div>
         </td>
         <td style="padding: 12px; text-align: right; color: #ec4899; font-weight: bold;">
-          ${(item.price * item.quantity).toLocaleString()} Den
+          ${escapeHtml((Number(item.price) * Number(item.quantity)).toLocaleString())} Den
         </td>
       </tr>
     `,
@@ -96,11 +94,11 @@ export class OrdersService {
             </div>
             
             <div class="info-box">
-              <p style="margin: 5px 0;"><strong>Klienti:</strong> ${order.firstName} ${order.lastName}</p>
-              <p style="margin: 5px 0;"><strong>Telefoni:</strong> ${order.phone}</p>
-              <p style="margin: 5px 0;"><strong>Qyteti:</strong> ${order.city}</p>
-              <p style="margin: 5px 0;"><strong>Adresa:</strong> ${order.address}</p>
-              <p style="margin: 5px 0;"><strong>Metoda e Pagesës:</strong> ${order.paymentMethod === 'cod' ? 'Pagesë në dorëzim (Cash)' : order.paymentMethod}</p>
+              <p style="margin: 5px 0;"><strong>Klienti:</strong> ${escapeHtml(order.firstName)} ${escapeHtml(order.lastName)}</p>
+              <p style="margin: 5px 0;"><strong>Telefoni:</strong> ${escapeHtml(order.phone)}</p>
+              <p style="margin: 5px 0;"><strong>Qyteti:</strong> ${escapeHtml(order.city)}</p>
+              <p style="margin: 5px 0;"><strong>Adresa:</strong> ${escapeHtml(order.address)}</p>
+              <p style="margin: 5px 0;"><strong>Metoda e Pagesës:</strong> ${order.paymentMethod === 'cod' ? 'Pagesë në dorëzim (Cash)' : escapeHtml(order.paymentMethod)}</p>
             </div>
 
             <table class="table">
@@ -117,7 +115,7 @@ export class OrdersService {
 
             <div style="margin-top: 30px; text-align: right; padding-right: 12px;">
               <p style="font-size: 16px; color: #666; margin-bottom: 5px;">Total i Përgjithshëm:</p>
-              <h2 style="color: #ec4899; font-size: 36px; margin: 0;">${order.totalAmount.toLocaleString()} Den</h2>
+              <h2 style="color: #ec4899; font-size: 36px; margin: 0;">${escapeHtml(Number(order.totalAmount).toLocaleString())} Den</h2>
             </div>
           </div>
           <div class="footer">
@@ -128,7 +126,11 @@ export class OrdersService {
       </html>
     `;
 
-    const resendKey = this.configService.get<string>('RESEND_API_KEY') || process.env.RESEND_API_KEY;
+    const resendKey = this.configService.get<string>('RESEND_API_KEY');
+    if (!resendKey || !ownerEmail) {
+      console.warn('RESEND_API_KEY or EMAIL not set; skipping order notification email.');
+      return;
+    }
 
     try {
       const response = await fetch('https://api.resend.com/emails', {
