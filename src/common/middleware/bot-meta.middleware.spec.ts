@@ -64,6 +64,15 @@ describe('BotMetaMiddleware', () => {
     expect(res.status).not.toHaveBeenCalled();
   });
 
+  it('should call next() for search engines so they get the real page', async () => {
+    for (const ua of ['Googlebot/2.1 (+http://www.google.com/bot.html)', 'bingbot/2.0']) {
+      const { req, res, next } = createMockReqRes({ userAgent: ua, path: '/produktet/12345' });
+      await middleware.use(req, res, next);
+      expect(next).toHaveBeenCalledTimes(1);
+      expect(res.status).not.toHaveBeenCalled();
+    }
+  });
+
   it('should call next() for non-GET requests', async () => {
     const { req, res, next } = createMockReqRes({
       method: 'POST',
@@ -115,7 +124,7 @@ describe('BotMetaMiddleware', () => {
     expect(html).toContain('<meta property="og:title" content="Bleu de Chanel - 4500 Den">');
     expect(html).toContain('<meta property="og:description" content="Luks dhe freski aromatike.">');
     expect(html).toContain('<meta property="og:image" content="https://res.cloudinary.com/test/image.jpg">');
-    expect(html).toContain('<meta property="og:url" content="https://www.lemeaflagrance.shop/produktet/d8c83e1c-5d5e-4c7b-91f1-3962b9a7c36d">');
+    expect(html).toContain('<meta property="og:url" content="https://lemeaflagrance.shop/produktet/d8c83e1c-5d5e-4c7b-91f1-3962b9a7c36d">');
     expect(html).toContain('<meta property="og:type" content="product">');
     expect(html).toContain('<meta property="product:price:amount" content="4500">');
     expect(html).toContain('<meta property="product:price:currency" content="MKD">');
@@ -125,14 +134,12 @@ describe('BotMetaMiddleware', () => {
     expect(html).toContain('<meta name="twitter:image" content="https://res.cloudinary.com/test/image.jpg">');
   });
 
-  it('should detect various bots: viber, whatsapp, twitterbot, telegrambot, googlebot, etc.', async () => {
+  it('should detect various bots: viber, whatsapp, twitterbot, telegrambot, etc.', async () => {
     const bots = [
       'Viber',
       'WhatsApp/2.21.11.17 A',
       'Twitterbot/1.0',
       'TelegramBot (like TwitterBot)',
-      'Googlebot/2.1 (+http://www.google.com/bot.html)',
-      'bingbot/2.0',
       'LinkedInBot/1.0',
       'Slackbot-LinkExpanding 1.0',
       'Mozilla/5.0 (compatible; Discordbot/2.0; +https://discordapp.com)',

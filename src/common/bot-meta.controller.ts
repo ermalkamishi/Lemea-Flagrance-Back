@@ -40,7 +40,7 @@ export class BotMetaController {
 
   // Regex matching social media and search engine crawlers
   private readonly botUserAgents =
-    /facebookexternalhit|viber|whatsapp|twitterbot|telegrambot|googlebot|bingbot|linkedinbot|slackbot|discordbot/i;
+    /facebookexternalhit|facebot|viber|whatsapp|twitterbot|telegrambot|linkedinbot|slackbot|discordbot/i;
 
   constructor(private readonly productsService: ProductsService) {}
 
@@ -61,7 +61,7 @@ export class BotMetaController {
 
     // 1. If NOT from a bot (normal browser user hitting backend directly): redirect to frontend SPA
     if (!isBot) {
-      res.redirect(`https://www.lemeaflagrance.shop/produktet/${id}`);
+      res.redirect(`https://lemeaflagrance.shop/produktet/${id}`);
       return;
     }
 
@@ -97,15 +97,15 @@ export class BotMetaController {
       (product.images && product.images.length > 0 ? product.images[0] : '');
 
     if (imageUrl && !imageUrl.startsWith('http://') && !imageUrl.startsWith('https://')) {
-      imageUrl = `https://www.lemeaflagrance.shop${imageUrl.startsWith('/') ? '' : '/'}${imageUrl}`;
+      imageUrl = `https://lemeaflagrance.shop${imageUrl.startsWith('/') ? '' : '/'}${imageUrl}`;
     }
     if (!imageUrl) {
-      imageUrl = 'https://www.lemeaflagrance.shop/og-image.jpg';
+      imageUrl = 'https://lemeaflagrance.shop/logo.png';
     }
 
     const titleWithPrice = `${productTitle} - ${price} Den`;
     const pageTitle = `${titleWithPrice} | Lemea Flagrance`;
-    const ogUrl = `https://www.lemeaflagrance.shop/produktet/${id}`;
+    const ogUrl = `https://lemeaflagrance.shop/produktet/${id}`;
 
     // 5. Construct clean HTML string with OpenGraph and Twitter meta tags
     const html = `<!DOCTYPE html>

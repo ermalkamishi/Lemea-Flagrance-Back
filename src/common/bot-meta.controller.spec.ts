@@ -53,6 +53,15 @@ describe('BotMetaController', () => {
     return { req, res };
   };
 
+  it('should send search engines (Googlebot, Bingbot) to the real page, not the bot HTML', async () => {
+    for (const ua of ['Googlebot/2.1 (+http://www.google.com/bot.html)', 'bingbot/2.0']) {
+      const { req, res } = createMockReqRes({ userAgent: ua });
+      await controller.getProductMeta('test-product-id', req, res);
+      expect(res.redirect).toHaveBeenCalledWith('https://lemeaflagrance.shop/produktet/test-product-id');
+      expect(res.send).not.toHaveBeenCalled();
+    }
+  });
+
   it('should redirect regular browser users to the React SPA frontend', async () => {
     const { req, res } = createMockReqRes({
       userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
@@ -60,7 +69,7 @@ describe('BotMetaController', () => {
 
     await controller.getProductMeta('test-product-id', req, res);
 
-    expect(res.redirect).toHaveBeenCalledWith('https://www.lemeaflagrance.shop/produktet/test-product-id');
+    expect(res.redirect).toHaveBeenCalledWith('https://lemeaflagrance.shop/produktet/test-product-id');
     expect(res.send).not.toHaveBeenCalled();
     expect(productsService.findByIdOrSlug).not.toHaveBeenCalled();
   });
@@ -90,7 +99,7 @@ describe('BotMetaController', () => {
     expect(html).toContain('<meta property="og:title" content="Bleu de Chanel - 4500 Den">');
     expect(html).toContain('<meta property="og:description" content="Aromatic woody fragrance.">');
     expect(html).toContain('<meta property="og:image" content="https://res.cloudinary.com/test/image.jpg">');
-    expect(html).toContain('<meta property="og:url" content="https://www.lemeaflagrance.shop/produktet/d8c83e1c-5d5e-4c7b-91f1-3962b9a7c36d">');
+    expect(html).toContain('<meta property="og:url" content="https://lemeaflagrance.shop/produktet/d8c83e1c-5d5e-4c7b-91f1-3962b9a7c36d">');
     expect(html).toContain('<meta property="og:type" content="product">');
     expect(html).toContain('<meta property="product:price:amount" content="4500">');
     expect(html).toContain('<meta property="product:price:currency" content="MKD">');
@@ -100,14 +109,12 @@ describe('BotMetaController', () => {
     expect(html).toContain('<meta name="twitter:image" content="https://res.cloudinary.com/test/image.jpg">');
   });
 
-  it('should detect crawlers: Viber, WhatsApp, Twitter, Telegram, Googlebot, Slackbot, etc.', async () => {
+  it('should detect crawlers: Viber, WhatsApp, Twitter, Telegram, Slackbot, etc.', async () => {
     const bots = [
       'Viber',
       'WhatsApp/2.21.11.17 A',
       'Twitterbot/1.0',
       'TelegramBot (like TwitterBot)',
-      'Googlebot/2.1 (+http://www.google.com/bot.html)',
-      'bingbot/2.0',
       'LinkedInBot/1.0',
       'Slackbot-LinkExpanding 1.0',
       'Mozilla/5.0 (compatible; Discordbot/2.0; +https://discordapp.com)',

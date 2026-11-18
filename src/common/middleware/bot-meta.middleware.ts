@@ -30,7 +30,7 @@ export class BotMetaMiddleware implements NestMiddleware {
 
   // Regex for social media and search engine crawlers
   private readonly botUserAgents =
-    /facebookexternalhit|facebot|viber|whatsapp|twitterbot|telegrambot|googlebot|bingbot|linkedinbot|slackbot|discordbot/i;
+    /facebookexternalhit|facebot|viber|whatsapp|twitterbot|telegrambot|linkedinbot|slackbot|discordbot/i;
 
   // Regex matching product route patterns e.g. /produktet/:id or /products/:id
   private readonly productRouteRegex =
@@ -89,13 +89,13 @@ export class BotMetaMiddleware implements NestMiddleware {
         (product.images && product.images.length > 0 ? product.images[0] : '');
 
       if (imageUrl && !imageUrl.startsWith('http://') && !imageUrl.startsWith('https://')) {
-        imageUrl = `https://www.lemeaflagrance.shop${imageUrl.startsWith('/') ? '' : '/'}${imageUrl}`;
+        imageUrl = `https://lemeaflagrance.shop${imageUrl.startsWith('/') ? '' : '/'}${imageUrl}`;
       }
       if (!imageUrl) {
-        imageUrl = 'https://www.lemeaflagrance.shop/og-image.jpg';
+        imageUrl = 'https://lemeaflagrance.shop/logo.png';
       }
 
-      const fullUrl = `https://www.lemeaflagrance.shop${req.path}`;
+      const fullUrl = `https://lemeaflagrance.shop${req.path}`;
       const titleWithPrice = `${productTitle} - ${price} Den`;
       const pageTitle = `${titleWithPrice} | Lemea Flagrance`;
 
