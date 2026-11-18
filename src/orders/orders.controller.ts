@@ -7,6 +7,7 @@ import { AuthGuard } from '@nestjs/passport';
 import { RolesGuard } from '../auth/roles.guard';
 import { Roles } from '../auth/roles.decorator';
 import { OptionalJwtAuthGuard } from '../auth/optional-jwt-auth.guard';
+import { RateLimit } from '../common/rate-limit.decorator';
 
 @ApiTags('orders')
 @Controller('orders')
@@ -14,6 +15,7 @@ export class OrdersController {
   constructor(private readonly ordersService: OrdersService) {}
 
   @Post()
+  @RateLimit(10, 10) // 10 orders per 10 minutes per IP (stops fake-order spam)
   @UseGuards(OptionalJwtAuthGuard)
   @ApiOperation({ summary: 'Create a new order (guest or logged-in user)' })
   create(@Body() createOrderDto: CreateOrderDto, @Request() req: any) {

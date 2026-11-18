@@ -5,6 +5,7 @@ import { RolesGuard } from '../auth/roles.guard';
 import { Roles } from '../auth/roles.decorator';
 import { ReviewsService } from './reviews.service';
 import { CreateReviewDto } from './dto/create-review.dto';
+import { RateLimit } from '../common/rate-limit.decorator';
 
 @ApiTags('reviews')
 @Controller('reviews')
@@ -12,6 +13,7 @@ export class ReviewsController {
   constructor(private readonly reviewsService: ReviewsService) {}
 
   @Post()
+  @RateLimit(5, 60) // 5 reviews per hour per IP
   @ApiOperation({ summary: 'Create a new review' })
   create(@Body() createReviewDto: CreateReviewDto) {
     return this.reviewsService.create(createReviewDto);

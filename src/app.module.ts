@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
+import { ThrottlerModule } from '@nestjs/throttler';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
@@ -17,6 +18,12 @@ import { ContactModule } from './contact/contact.module';
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
+    }),
+    // Rate limiting is opt-in per route via @RateLimit() (see common/rate-limit.decorator.ts)
+    ThrottlerModule.forRoot({
+      throttlers: [{ name: 'default', ttl: 60_000, limit: 60 }],
+      errorMessage:
+        'Shumë kërkesa nga ju. Ju lutem provoni përsëri pas disa minutash.',
     }),
     TypeOrmModule.forRootAsync({
       imports: [ConfigModule],
