@@ -24,7 +24,14 @@ export class OrdersService {
     // Decrement stock for each item. Each item is handled on its own so one bad
     // item does not stop the stock update for the rest of the order.
     if (Array.isArray(savedOrder.items)) {
-      for (const item of savedOrder.items) {
+      // A gift box line holds its products in `boxItems`. Expand it so stock is
+      // decremented for each product inside the box (box quantity × 1 each).
+      const stockLines = savedOrder.items.flatMap((item) =>
+        item?.isGiftBox && Array.isArray(item.boxItems)
+          ? item.boxItems.map((b: any) => ({ productId: b?.productId, quantity: item.quantity ?? 1 }))
+          : [item],
+      );
+      for (const item of stockLines) {
         const pid = item?.productId || item?.id;
         const qty = Math.floor(Number(item?.quantity ?? 1));
         if (!pid || !Number.isFinite(qty) || qty <= 0) {
