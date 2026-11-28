@@ -10,6 +10,8 @@ import {
   UploadedFile,
   UseGuards,
   NotFoundException,
+  ParseUUIDPipe,
+  BadRequestException,
 } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth, ApiOperation, ApiConsumes } from '@nestjs/swagger';
 import { AuthGuard } from '@nestjs/passport';
@@ -21,6 +23,16 @@ import { ProductsService } from './products.service';
 import { CloudinaryService } from '../cloudinary/cloudinary.service';
 import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
+
+// Product photos: one image file, max 10 MB (Cloudinary's free-plan image limit).
+const IMAGE_UPLOAD_OPTIONS = {
+  storage: memoryStorage(),
+  limits: { fileSize: 10 * 1024 * 1024, files: 1 },
+  fileFilter: (_req: any, file: Express.Multer.File, cb: (error: Error | null, accept: boolean) => void) => {
+    if (file.mimetype?.startsWith('image/')) return cb(null, true);
+    cb(new BadRequestException('Only image files can be uploaded'), false);
+  },
+};
 
 @ApiTags('products')
 @Controller('products')
@@ -36,7 +48,7 @@ export class ProductsController {
   @Post()
   @ApiOperation({ summary: 'Create a new product' })
   @ApiConsumes('multipart/form-data')
-  @UseInterceptors(FileInterceptor('image', { storage: memoryStorage() }))
+  @UseInterceptors(FileInterceptor('image', IMAGE_UPLOAD_OPTIONS))
   async create(@Body() createProductDto: CreateProductDto, @UploadedFile() file: any) {
     let imageUrl = createProductDto.image;
     if (file) {
@@ -75,9 +87,9 @@ export class ProductsController {
   @Patch(':id')
   @ApiOperation({ summary: 'Update a product' })
   @ApiConsumes('multipart/form-data')
-  @UseInterceptors(FileInterceptor('image', { storage: memoryStorage() }))
+  @UseInterceptors(FileInterceptor('image', IMAGE_UPLOAD_OPTIONS))
   async update(
-    @Param('id') id: string,
+    @Param('id', ParseUUIDPipe) id: string,
     @Body() updateProductDto: UpdateProductDto,
     @UploadedFile() file: any,
   ) {
@@ -105,7 +117,7 @@ export class ProductsController {
   @Roles('admin')
   @Delete(':id')
   @ApiOperation({ summary: 'Delete a product' })
-  remove(@Param('id') id: string) {
+  remove(@Param('id', ParseUUIDPipe) id: string) {
     return this.productsService.remove(id);
   }
 }

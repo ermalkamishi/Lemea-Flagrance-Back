@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Request } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Request, ParseUUIDPipe } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth, ApiOperation } from '@nestjs/swagger';
 import { OrdersService } from './orders.service';
 import { CreateOrderDto } from './dto/create-order.dto';
@@ -52,7 +52,7 @@ export class OrdersController {
   @Roles('admin')
   @Get(':id')
   @ApiOperation({ summary: 'Get order by id' })
-  findOne(@Param('id') id: string) {
+  findOne(@Param('id', ParseUUIDPipe) id: string) {
     return this.ordersService.findOne(id);
   }
 
@@ -61,7 +61,7 @@ export class OrdersController {
   @Roles('admin')
   @Patch(':id')
   @ApiOperation({ summary: 'Update an order' })
-  update(@Param('id') id: string, @Body() updateOrderDto: UpdateOrderDto) {
+  update(@Param('id', ParseUUIDPipe) id: string, @Body() updateOrderDto: UpdateOrderDto) {
     return this.ordersService.update(id, updateOrderDto);
   }
 
@@ -70,7 +70,7 @@ export class OrdersController {
   @Roles('admin')
   @Delete(':id')
   @ApiOperation({ summary: 'Delete an order' })
-  remove(@Param('id') id: string) {
+  remove(@Param('id', ParseUUIDPipe) id: string) {
     return this.ordersService.remove(id);
   }
 }
